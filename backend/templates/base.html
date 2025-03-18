@@ -1,55 +1,119 @@
-<!doctype html>
+<!DOCTYPE html>
 <title>{% block title %}{% endblock %} - Flaskr</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit&family=Montserrat&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Kanit&family=Montserrat&family=Open+Sans:wght@500&display=swap"
+  rel="stylesheet"
+/>
 <body>
-    <div class="full-body-container">
-        <div class="top-text">
-            <div class="google-colors">
-                <h1 id="google-4">4</h1>
-                <h1 id="google-3">3</h1>
-                <h1 id="google-0-1">0</h1>
-                <h1 id="google-0-2">0</h1>
-            </div>
-            <div class="input-box" onclick="sendFocus()">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a Keeping up with the Kardashians episode" id="filter-text-val" onkeyup="filterText()">
-            </div>
+  <div class="full-body-container">
+    <div class="top-text">
+      <div id="sweatmetric">SWEATMETRIC</div>
+      <div class="input-menu">
+        <div class="input-box" onclick="focus()">
+          <img src="{{ url_for('static', filename='images/mag.png') }}" />
+          <input
+            placeholder="Sport"
+            id="filter-text-val"
+            onkeyup="createCalendar([[value, value],'rest',[],[],[],[],[]])"
+          />
         </div>
-        <div id="answer-box">
-
+        <!--The onkeyup value is just a placeholder for now - this should be the exercises that we find-->
+        <div class="input-box" onclick="focus()">
+          <img src="{{ url_for('static', filename='images/mag.png') }}" />
+          <input
+            placeholder="Fitness level"
+            id="filter-text-val"
+            onkeyup="createCalendar([[],[],[],[],[],[],[]])"
+          />
+          <!-- change onkeyup function for these when we get backend started, also change these to dropdowns -->
         </div>
+        <div class="input-box" onclick="focus()">
+          <img src="{{ url_for('static', filename='images/mag.png') }}" />
+          <input
+            placeholder="Goals"
+            id="filter-text-val"
+            onkeyup="createCalendar([[],[],[],[],[],[],[]])"
+          />
+        </div>
+      </div>
     </div>
+    <div id="answer-box"></div>
+  </div>
 
-    <script>
+  <script>
+    function exerciseDayTemplate(exerciseList, day) {
+      //create each day (monday through sunday) with rest day as default off
+      if (exerciseList !== "rest") {
+        //janky but it technically works
+        tempDiv = `<div class='dayBox'>
+                            <p class=day>${day}: </p>`;
+        exerciseList.forEach((exercise, index) => {
+          tempDiv += `<p class='exercise'>Exercise ${
+            index + 1
+          }: ${exercise}</p>`; //enumerate every exercise
+        });
+        return tempDiv + `\n</div>`;
+      } else {
+        return `<div class='dayBox'> <p class=day>${day}: Rest Day - don't exercise today!</p> </div>`;
+      }
+    }
 
-        function answerBoxTemplate(title,titleDesc,rating){
-            return `<div class=''>
+    function answerBoxTemplate(title, titleDesc, rating) {
+      return `<div class=''>
                 <h3 class='episode-title'>${title}</h3>
                 <p class='episode-desc'>${titleDesc}</p>
                 <p class='episode-rating'>IMDB Rating: ${rating}</p>
-            </div>`
-        }
+            </div>`;
+    }
 
-        function sendFocus(){
-            document.getElementById('filter-text-val').focus()
-        }
-
-        function filterText(){
-            document.getElementById("answer-box").innerHTML = ""
-            console.log(document.getElementById("filter-text-val").value)
-            fetch("/episodes?" + new URLSearchParams({ title: document.getElementById("filter-text-val").value }).toString())
-            .then((response) => response.json())
-            .then((data) => data.forEach(row => {
-                
-                let tempDiv = document.createElement("div")
-                tempDiv.innerHTML = answerBoxTemplate(row.title,row.descr,row.imdb_rating)
-                document.getElementById("answer-box").appendChild(tempDiv)
-            }));
-
-        }
-            
-    </script>
+    function createCalendar(exerciseList) {
+      //nested exercise list per day
+      document.getElementById("answer-box").innerHTML = ""; //clear the initial calendar
+      console.log(exerciseList, "hi");
+      let dayArr = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      let calendarDiv = document.createElement("div");
+      for (let i = 0; i < 7; i++) {
+        dayBox = exerciseDayTemplate(exerciseList[i], dayArr[i]);
+        //still have to add rest in here somewhere
+        let tempDiv = document.createElement("div");
+        tempDiv.innerHTML = dayBox;
+        calendarDiv.append(tempDiv);
+      }
+      document.getElementById("answer-box").appendChild(calendarDiv);
+    }
+    createCalendar([[], [], [], [], [], [], []]);
+    function filterText() {
+      document.getElementById("answer-box").innerHTML = "";
+      console.log(document.getElementById("filter-text-val").value);
+      fetch(
+        "/episodes?" +
+          new URLSearchParams({
+            title: document.getElementById("filter-text-val").value,
+          }).toString()
+      )
+        .then((response) => response.json())
+        .then((data) =>
+          data.forEach((row) => {
+            let tempDiv = document.createElement("div");
+            tempDiv.innerHTML = answerBoxTemplate(
+              row.title,
+              row.descr,
+              row.imdb_rating
+            );
+            document.getElementById("answer-box").appendChild(tempDiv);
+          })
+        );
+    }
+  </script>
 </body>
