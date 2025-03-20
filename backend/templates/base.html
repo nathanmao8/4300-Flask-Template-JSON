@@ -10,54 +10,73 @@
 <body>
   <div class="full-body-container">
     <div class="top-text">
-      <div id="sweatmetric">SWEATMETRIC</div>
+      <div id="sweatmetric">
+        SWE<img
+          src="{{ url_for('static', filename='images/sweat_drop.png') }}"
+          style="width: 80px; margin: -15px; position: relative; top: 10px"
+        />TMETRIC
+      </div>
       <div class="input-menu">
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
           <input
             placeholder="Sport"
-            id="filter-text-val"
-            onkeyup="createCalendar([[value, value],'rest',[],[],[],[],[]])"
+            id="filter-text-sport"
+            onkeyup="queryUpdate(value, 0)"
           />
         </div>
-        <!--The onkeyup value is just a placeholder for now - this should be the exercises that we find-->
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
           <input
             placeholder="Fitness level"
-            id="filter-text-val"
-            onkeyup="createCalendar([[],[],[],[],[],[],[]])"
+            id="filter-text-level"
+            onkeyup="queryUpdate(value, 1)"
           />
-          <!-- change onkeyup function for these when we get backend started, also change these to dropdowns -->
+          <!-- change these to dropdowns maybe -->
         </div>
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
           <input
             placeholder="Goals"
-            id="filter-text-val"
-            onkeyup="createCalendar([[],[],[],[],[],[],[]])"
+            id="filter-text-goals"
+            onkeyup="queryUpdate(value, 2)"
           />
         </div>
       </div>
     </div>
-    <div id="answer-box"></div>
+    <div
+      id="curr-query"
+      style="
+        font-family: 'Open Sans', sans-serif;
+        white-space: pre-line;
+        margin-top: 20px;
+      "
+    ></div>
+    <!-- Also a placeholder - just here to show that it makes sense -->
+    <div id="calendar-box"></div>
   </div>
 
   <script>
+    let query = ["None", "None", "None"]; //we want to assemble a full query
+    function queryUpdate(text, index) {
+      query[index] = text;
+      curr_query = document.getElementById("curr-query");
+      curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`;
+      createCalendar([[text, text], "rest", [], [], [], [], []]); //when we have a search, put it here!!
+    }
     function exerciseDayTemplate(exerciseList, day) {
       //create each day (monday through sunday) with rest day as default off
       if (exerciseList !== "rest") {
-        //janky but it technically works
         tempDiv = `<div class='dayBox'>
-                            <p class=day>${day}: </p>`;
+                            <p class='day'>${day}</p>`;
         exerciseList.forEach((exercise, index) => {
           tempDiv += `<p class='exercise'>Exercise ${
             index + 1
           }: ${exercise}</p>`; //enumerate every exercise
         });
-        return tempDiv + `\n</div>`;
+        return tempDiv + `</div>`;
       } else {
-        return `<div class='dayBox'> <p class=day>${day}: Rest Day - don't exercise today!</p> </div>`;
+        return `<div class='dayBox'> <p class='day'>${day}</p><p class='exercise'>Rest Day - don't exercise today!</p> </div>`;
       }
     }
 
@@ -71,7 +90,7 @@
 
     function createCalendar(exerciseList) {
       //nested exercise list per day
-      document.getElementById("answer-box").innerHTML = ""; //clear the initial calendar
+      document.getElementById("calendar-box").innerHTML = ""; //clear the initial calendar
       console.log(exerciseList, "hi");
       let dayArr = [
         "Sunday",
@@ -82,19 +101,19 @@
         "Friday",
         "Saturday",
       ];
-      let calendarDiv = document.createElement("div");
       for (let i = 0; i < 7; i++) {
         dayBox = exerciseDayTemplate(exerciseList[i], dayArr[i]);
         //still have to add rest in here somewhere
         let tempDiv = document.createElement("div");
         tempDiv.innerHTML = dayBox;
-        calendarDiv.append(tempDiv);
+        document.getElementById("calendar-box").appendChild(tempDiv);
       }
-      document.getElementById("answer-box").appendChild(calendarDiv);
     }
-    createCalendar([[], [], [], [], [], [], []]);
+
+    queryUpdate("None", 0); //create the initial calendar and query
+
     function filterText() {
-      document.getElementById("answer-box").innerHTML = "";
+      document.getElementById("calendar-box").innerHTML = "";
       console.log(document.getElementById("filter-text-val").value);
       fetch(
         "/episodes?" +

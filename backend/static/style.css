@@ -23,14 +23,9 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   border-bottom: black 10px;
   padding: 50px 0px 50px 0px;
-  background-color: rgb(72, 72, 224);
+  background-color: rgb(0, 140, 186);
   width: 100vw;
   border-bottom: 3px solid rgba(0, 0, 0, 0.3);
-}
-
-.google-colors h1 {
-  margin-bottom: 0;
-  margin-right: 3px;
 }
 
 .input-menu {
@@ -56,17 +51,42 @@
   width: 20px;
 }
 
-.dayBox {
+.episode-title {
+  font-family: "Kanit", sans-serif;
+}
+
+.episode-desc {
+  font-family: "Montserrat", sans-serif;
+}
+
+#calendar-box {
+  width: 90vw;
+  margin-top: 50px;
+  z-index: 2; /*want to put this border over the daybox border*/
+  border: solid rgb(0, 140, 186) 4px;
+  border-radius: 10px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.day {
+  border-bottom: solid rgba(0, 0, 0, 0.4) 3px;
+  text-align: center;
+  padding-bottom: 5px;
+  font-weight: bold;
+}
+
+.dayBox {
   padding: 20px;
-  border-top: solid black 3px;
-  border-left: solid black 3px;
-  border-right: solid black 3px;
+  font-family: "Open Sans", sans-serif;
+  flex: 1;
+  min-width: 100px;
 }
 
 .exercise {
   display: block;
+  font-family: "Open Sans", sans-serif;
 }
 
 .top-text {
@@ -81,19 +101,4 @@
   font-size: 16px;
   border: none;
   outline: 0;
-}
-
-#answer-box {
-  width: 700px;
-  margin-top: 50px;
-
-  border-bottom: solid black 3px;
-}
-
-.episode-title {
-  font-family: "Kanit", sans-serif;
-}
-
-.episode-desc {
-  font-family: "Montserrat", sans-serif;
 }
