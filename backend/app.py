@@ -31,8 +31,9 @@ CORS(app)
 
 #function to convert 'megaGymDataset.csv' to 'exerciseDataset.json' 
 csv_filename = '../data/megaGymDataset.csv'
-json_filename = '../data/exerciseDataset.json'
-
+#json_filename = '../data/exerciseDataset.json' #can change back to relative path for local development
+json_filename = 'exerciseDataset.json'
+'''
 # Read CSV and convert to JSON
 data = []
 with open(csv_filename, newline='', encoding='utf-8') as csvfile:
@@ -55,7 +56,9 @@ with open(csv_filename, newline='', encoding='utf-8') as csvfile:
 # Write to JSON file
 with open(json_filename, 'w', encoding='utf-8') as jsonfile:
     json.dump(data, jsonfile, indent=4, ensure_ascii=False)
-
+'''
+with open(json_filename, 'r', encoding='utf-8') as file:
+    data = json.load(file)
 
 
 
