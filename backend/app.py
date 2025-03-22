@@ -1,5 +1,4 @@
 from collections import Counter
-import csv
 import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 import os
@@ -31,7 +30,7 @@ CORS(app)
 
 #function to convert 'megaGymDataset.csv' to 'exerciseDataset.json' 
 csv_filename = '../data/megaGymDataset.csv'
-#json_filename = '../data/exerciseDataset.json' #can change back to relative path for local development
+#json_filename = 'backend/exerciseDataset.json' #can change back to relative path for local development
 json_filename = 'exerciseDataset.json'
 '''
 # Read CSV and convert to JSON
