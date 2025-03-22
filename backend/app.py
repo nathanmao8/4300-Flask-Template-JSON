@@ -87,23 +87,6 @@ def build_vectorizer(max_features, stop_words, max_df=90, min_df=1, norm='l2'):
     vectorizer = TfidfVectorizer(max_features=max_features, stop_words=stop_words, max_df=max_df,min_df=min_df,norm=norm)
     return vectorizer
 
-#return the cosine similarity score between a query and a document
-def cossim(query, doc):
-    #compute the norms and dot product, divide dot by norms multiplied
-
-    vectorizer = build_vectorizer(5000, "english")
-    tokens = TreebankWordTokenizer().tokenize(query)
-    doc = TreebankWordTokenizer().tokenize(doc["Description"])
-    corpus = doc + tokens  # Combine doc and query into a single list
-    vectorizer.fit(corpus)
-    doc_vector = vectorizer.transform(doc).toarray()
-    query_vector = vectorizer.transform(tokens).toarray()
-    numerator = np.dot(query_vector, doc_vector.T)
-    denominator = np.linalg.norm(query_vector) * np.linalg.norm(doc_vector)
-    vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
-    
-    return numerator/denominator
-
 def cossim(query, doc):
     # Initialize the vectorizer
     vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
