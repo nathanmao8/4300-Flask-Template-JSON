@@ -16,34 +16,40 @@
           style="width: 80px; margin: -15px; position: relative; top: 10px"
         />TMETRIC
       </div>
+
       <div class="input-menu">
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
+
           <input
             placeholder="Sport"
-            id="filter-text-sport"
-            onkeyup="queryUpdate(value, 0)"
+            list="sports"
+            name="mySport"
+            id="mySport"
           />
+          <datalist id="sports">
+            <option value="Basketball"></option>
+            <option value="Baseball"></option>
+            <option value="Lacrosse"></option>
+            <option value="Tennis"></option>
+            <option value="Volleyball"></option>
+            <option value="Weightlifting"></option>
+            <option value="Other"></option>
+          </datalist>
         </div>
+
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
-          <input
-            placeholder="Fitness level"
-            id="filter-text-level"
-            onkeyup="queryUpdate(value, 1)"
-          />
+          <input placeholder="Fitness level" id="filter-text-level" />
           <!-- change these to dropdowns maybe -->
         </div>
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
-          <input
-            placeholder="Goals"
-            id="filter-text-goals"
-            onkeyup="queryUpdate(value, 2)"
-          />
+          <input placeholder="Goals" id="filter-text-goals" />
         </div>
       </div>
     </div>
+    <div id="generate-button" onclick="queryUpdate()">Generate Plan</div>
     <div
       id="curr-query"
       style="
@@ -58,12 +64,17 @@
 
   <script>
     let query = ["None", "None", "None"]; //we want to assemble a full query
-    function queryUpdate(text, index) {
-      query[index] = text;
+    function queryUpdate() {
+      sport = document.getElementById("mySport").value;
+      level = document.getElementById("filter-text-level").value;
+      goals = document.getElementById("filter-text-goals").value;
+      query = [sport, level, goals];
       curr_query = document.getElementById("curr-query");
       curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`;
-      createCalendar([[text, text], "rest", [], [], [], [], []]); //when we have a search, put it here!!
+      //for now - 6 exercises a day, rest every 3rd day - 30 total exercises based on splits
+      createCalendar([[sport, sport], [], "rest", [], [], "rest", []]); //when we have a search, put it here!!
     }
+
     function exerciseDayTemplate(exerciseList, day) {
       //create each day (monday through sunday) with rest day as default off
       if (exerciseList !== "rest") {
@@ -91,7 +102,6 @@
     function createCalendar(exerciseList) {
       //nested exercise list per day
       document.getElementById("calendar-box").innerHTML = ""; //clear the initial calendar
-      console.log(exerciseList, "hi");
       let dayArr = [
         "Sunday",
         "Monday",
@@ -109,8 +119,6 @@
         document.getElementById("calendar-box").appendChild(tempDiv);
       }
     }
-
-    queryUpdate("None", 0); //create the initial calendar and query
 
     function filterText() {
       document.getElementById("calendar-box").innerHTML = "";

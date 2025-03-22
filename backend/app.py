@@ -28,6 +28,36 @@ with open(json_file_path, 'r') as file:
 app = Flask(__name__)
 CORS(app)
 
+#get the exercise percentage split for a plan given a sport - should add to num_exercises
+def get_split(sport, num_exercises):
+    given_sports = ["Basketball", "Baseball", "Lacrosse", "Tennis", "Volleyball", "Tennis", "Weightlifting", "Other"]
+    exercise_data = {
+        "Basketball": {"Glutes": 15, "Hamstrings": 15, "Quads": 20, "Biceps": 10, "Triceps": 10, "Shoulders": 10, "Back": 5, "Chest": 5, "Cardio": 30, "Abs/Core": 15},
+        "Baseball": {"Glutes": 10, "Hamstrings": 10, "Quads": 10, "Biceps": 15, "Triceps": 15, "Shoulders": 15, "Back": 10, "Chest": 5, "Cardio": 15, "Abs/Core": 15},
+        "Lacrosse": {"Glutes": 15, "Hamstrings": 15, "Quads": 20, "Biceps": 10, "Triceps": 10, "Shoulders": 10, "Back": 10, "Chest": 5, "Cardio": 35, "Abs/Core": 15},
+        "Tennis": {"Glutes": 10, "Hamstrings": 10, "Quads": 15, "Biceps": 10, "Triceps": 10, "Shoulders": 15, "Back": 10, "Chest": 5, "Cardio": 35, "Abs/Core": 15},
+        "Volleyball": {"Glutes": 15, "Hamstrings": 10, "Quads": 15, "Biceps": 10, "Triceps": 10, "Shoulders": 15, "Back": 10, "Chest": 5, "Cardio": 25, "Abs/Core": 15},
+        "Weightlifting": {"Glutes": 20, "Hamstrings": 15, "Quads": 20, "Biceps": 10, "Triceps": 10, "Shoulders": 10, "Back": 15, "Chest": 10, "Cardio": 5, "Abs/Core": 10},
+        "Other": {"Glutes": 15, "Hamstrings": 10, "Quads": 15, "Biceps": 10, "Triceps": 10, "Shoulders": 10, "Back": 10, "Chest": 10, "Cardio": 20, "Abs/Core": 10},
+    }
+    if sport not in given_sports:
+        sport = "Other" #default for now - eventually we will do edit distance
+    percentages = exercise_data[sport]
+    sport_dict = {muscle: round((percent / 100) * num_exercises) for muscle, percent in percentages.items()}
+    total_assigned_exercises = sum(sport_dict.values())
+    # make sure the total exercises adds to num_exercises
+    while total_assigned_exercises > num_exercises:
+        max_muscle = max(sport_dict, key=sport_dict.get)
+        if sport_dict[max_muscle] > 0:
+            sport_dict[max_muscle] -= 1
+            total_assigned_exercises -= 1
+    while total_assigned_exercises < num_exercises:
+        min_muscle = min((m for m in sport_dict if sport_dict[m] > 0), key=sport_dict.get, default=None)
+        if min_muscle:
+            sport_dict[min_muscle] += 1
+            total_assigned_exercises += 1
+    return sport_dict
+
 def build_inverted_index(msgs) -> dict: 
     """Builds an inverted index from the messages.
 

@@ -51,6 +51,16 @@
   width: 20px;
 }
 
+#generate-button {
+  font-family: "Open Sans", sans-serif;
+  border: solid rgb(0, 140, 186) 4px;
+  border-radius: 20px;
+  padding: 10px;
+  margin-top: 20px;
+  color: #fff;
+  background: rgb(0, 140, 186);
+}
+
 .episode-title {
   font-family: "Kanit", sans-serif;
 }
@@ -62,9 +72,7 @@
 #calendar-box {
   width: 90vw;
   margin-top: 50px;
-  z-index: 2; /*want to put this border over the daybox border*/
-  border: solid rgb(0, 140, 186) 4px;
-  border-radius: 10px;
+  z-index: 2;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
