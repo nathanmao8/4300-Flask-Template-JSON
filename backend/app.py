@@ -1,4 +1,5 @@
 from collections import Counter
+import csv
 import json
 import math
 import os
@@ -27,6 +28,38 @@ with open(json_file_path, 'r') as file:
 
 app = Flask(__name__)
 CORS(app)
+
+#function to convert 'megaGymDataset.csv' to 'exerciseDataset.json' 
+
+
+csv_filename = '../data/megaGymDataset.csv'
+json_filename = '../data/exerciseDataset.json'
+
+# Read CSV and convert to JSON
+data = []
+with open(csv_filename, newline='', encoding='utf-8') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        # Create new combined 'description' field
+        title = row.get('Title', '').strip()
+        desc = row.get('Desc', '').strip()
+        row['Description'] = f"{title} {desc}".strip()
+
+        # Convert numerical fields to proper types
+        row['Rating'] = float(row['Rating']) if row['Rating'] else None
+
+        # Remove original Title and Desc fields
+        row.pop('Title', None)
+        row.pop('Desc', None)
+
+        data.append(row)
+
+# Write to JSON file
+with open(json_filename, 'w', encoding='utf-8') as jsonfile:
+    json.dump(data, jsonfile, indent=4, ensure_ascii=False)
+
+
+
 
 #get the exercise percentage split for a plan given a sport - should add to num_exercises
 def get_split(sport, num_exercises):
