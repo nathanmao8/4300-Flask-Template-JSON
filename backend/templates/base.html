@@ -72,7 +72,26 @@
       curr_query = document.getElementById("curr-query");
       curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`;
       //for now - 6 exercises a day, rest every 3rd day - 30 total exercises based on splits
-      createCalendar([[sport, sport], [], "rest", [], [], "rest", []]); //when we have a search, put it here!!
+      exerciseList = getExerciseList(query);
+      getExerciseList(query)
+        .then((exerciseList) => {
+          //turn the exercise list into groups of 6
+          const groupedExercises = [];
+          for (let i = 0; i < exerciseList.length; i += 6) {
+            groupedExercises.push(exerciseList.slice(i, i + 6)); // create groups of 6
+            console.log(groupedExercises);
+            if (
+              groupedExercises.length === 2 ||
+              groupedExercises.length === 5
+            ) {
+              groupedExercises.push("rest"); // Add "Rest" after every 3rd group
+            }
+          }
+          createCalendar(groupedExercises); // Call createCalendar after exercise_list is fetched
+        })
+        .catch((error) => {
+          console.error("Error fetching exercises:", error);
+        });
     }
 
     function exerciseDayTemplate(exerciseList, day) {
@@ -118,6 +137,30 @@
         tempDiv.innerHTML = dayBox;
         document.getElementById("calendar-box").appendChild(tempDiv);
       }
+    }
+
+    function getExerciseList(query) {
+      //our query is sport, level, goals
+      return fetch(
+        "/exercises?" +
+          new URLSearchParams({
+            sport: query[0],
+            level: query[1],
+            goals: query[2],
+          }).toString()
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          let exercise_list = [];
+          for (const group of data) {
+            for (const exercise of group) {
+              exercise_list.push(
+                `${exercise["Description"]} \nBody part: ${exercise["BodyPart"]}`
+              );
+            }
+          }
+          return exercise_list;
+        });
     }
 
     function filterText() {

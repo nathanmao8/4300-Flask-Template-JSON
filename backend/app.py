@@ -30,8 +30,8 @@ app = Flask(__name__)
 CORS(app)
 
 #function to convert 'megaGymDataset.csv' to 'exerciseDataset.json' 
-csv_filename = 'data/megaGymDataset.csv'
-json_filename = 'data/exerciseDataset.json'
+csv_filename = '../data/megaGymDataset.csv'
+json_filename = '../data/exerciseDataset.json'
 
 # Read CSV and convert to JSON
 data = []
@@ -199,6 +199,13 @@ def home():
 def episodes_search():
     text = request.args.get("title")
     return json_search(text)
+
+@app.route("/exercises")
+def exercises_search():
+    sport = request.args.get("sport")
+    query = request.args.get("level") + " " + request.args.get("goals")
+    exercises = sport_search(sport, query, 30)
+    return exercises
 
 if 'DB_NAME' not in os.environ:
     app.run(debug=True,host="0.0.0.0",port=5000)
