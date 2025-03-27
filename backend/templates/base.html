@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<title>{% block title %}{% endblock %} - Flaskr</title>
+<title>Sweatmetric</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="icon" type="image/png" href="static\images\sweat_drop.png" />
 <link
   href="https://fonts.googleapis.com/css2?family=Kanit&family=Montserrat&family=Open+Sans:wght@500&display=swap"
   rel="stylesheet"
@@ -49,7 +50,7 @@
         </div>
       </div>
     </div>
-    <div id="generate-button" onclick="queryUpdate()">Generate Plan</div>
+    <div class="generate-button" onclick="queryUpdate()">Generate Plan</div>
     <div
       id="curr-query"
       style="
@@ -64,13 +65,17 @@
 
   <script>
     let query = ["None", "None", "None"]; //we want to assemble a full query
+    let total = 0;
+
     function queryUpdate() {
+      total = 0;
       sport = document.getElementById("mySport").value;
       level = document.getElementById("filter-text-level").value;
       goals = document.getElementById("filter-text-goals").value;
       query = [sport, level, goals];
       curr_query = document.getElementById("curr-query");
-      curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`;
+      curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} 
+      \n\n Generating workout plan...`;
       //for now - 6 exercises a day, rest every 3rd day - 30 total exercises based on splits
       exerciseList = getExerciseList(query);
       getExerciseList(query)
@@ -88,9 +93,12 @@
             }
           }
           createCalendar(groupedExercises); // Call createCalendar after exercise_list is fetched
+          curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`; //not generating any more
         })
         .catch((error) => {
           console.error("Error fetching exercises:", error);
+          curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} 
+          \n \n Error fetching exercises. Please try again.`; //not generating any more
         });
     }
 
@@ -100,13 +108,29 @@
         tempDiv = `<div class='dayBox'>
                             <p class='day'>${day}</p>`;
         exerciseList.forEach((exercise, index) => {
-          tempDiv += `<p class='exercise'>Exercise ${
+          total += 1;
+          tempDiv += `<div><p class='exercise' id='${total}' ><strong>Exercise ${
             index + 1
-          }: ${exercise}</p>`; //enumerate every exercise
+          }: </strong>${exercise}</p>
+          <button class="toggle-btn" id='btn-${total}' onclick="toggleText('${total}')">▼</button>
+          </div>`; //enumerate every exercise
         });
         return tempDiv + `</div>`;
       } else {
         return `<div class='dayBox'> <p class='day'>${day}</p><p class='exercise'>Rest Day - don't exercise today!</p> </div>`;
+      }
+    }
+
+    function toggleText(index) {
+      const textElement = document.getElementById(`${index}`);
+      const button = document.getElementById(`btn-${index}`);
+
+      if (textElement.classList.contains("expanded")) {
+        textElement.classList.remove("expanded");
+        button.innerHTML = "▼";
+      } else {
+        textElement.classList.add("expanded");
+        button.innerHTML = "▲";
       }
     }
 
@@ -155,7 +179,8 @@
           for (const group of data) {
             for (const exercise of group) {
               exercise_list.push(
-                `${exercise["Description"]} \nBody part: ${exercise["BodyPart"]}`
+                `<br> ${exercise["Description"]} <br> <strong>Body part: </strong>${exercise["BodyPart"]}`
+                //want to split this by exercise title and stuff too
               );
             }
           }

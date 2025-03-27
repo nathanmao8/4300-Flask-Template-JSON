@@ -51,7 +51,7 @@
   width: 20px;
 }
 
-#generate-button {
+.generate-button {
   font-family: "Open Sans", sans-serif;
   border: solid rgb(0, 140, 186) 4px;
   border-radius: 20px;
@@ -93,8 +93,37 @@
 }
 
 .exercise {
-  display: block;
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Limit text to 3 lines */
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: "Open Sans", sans-serif;
+}
+
+/* drop down for exercise expanded */
+.expanded {
+  display: block;
+  line-clamp: unset;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.toggle-btn {
+  display: block;
+  margin-top: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  width: 100%;
+  border-radius: 10px;
+}
+.toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .top-text {

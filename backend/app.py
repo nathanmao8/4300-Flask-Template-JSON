@@ -30,8 +30,8 @@ CORS(app)
 
 #function to convert 'megaGymDataset.csv' to 'exerciseDataset.json' 
 csv_filename = '../data/megaGymDataset.csv'
-#json_filename = 'backend/exerciseDataset.json' #can change back to relative path for local development
-json_filename = 'exerciseDataset.json'
+json_filename = 'exerciseDataset.json' #can change back to relative path for local development
+#json_filename = 'exerciseDataset.json'
 '''
 # Read CSV and convert to JSON
 data = []
