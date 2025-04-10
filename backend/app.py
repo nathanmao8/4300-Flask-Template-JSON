@@ -1,13 +1,13 @@
-from collections import Counter
 import json
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
 import os
 from flask import Flask, render_template, request
 from flask_cors import CORS
 import numpy as np
 from helpers.MySQLDatabaseHandler import MySQLDatabaseHandler
 import pandas as pd
-from nltk import TreebankWordTokenizer
+import math
 
 # ROOT_PATH for linking with all your files. 
 # Feel free to use a config.py or settings.py with a global export variable
@@ -59,48 +59,28 @@ with open(json_filename, 'w', encoding='utf-8') as jsonfile:
 with open(json_filename, 'r', encoding='utf-8') as file:
     data = json.load(file)
 
-
-
-def build_vectorizer(max_features, stop_words, max_df=90, min_df=1, norm='l2'):
-    """Returns a TfidfVectorizer object with the above preprocessing properties.
-    
-    Note: This function may log a deprecation warning. This is normal, and you
-    can simply ignore it.
-    
-    Parameters
-    ----------
-    max_features : int
-        Corresponds to 'max_features' parameter of the sklearn TfidfVectorizer 
-        constructer.
-    stop_words : str
-        Corresponds to 'stop_words' parameter of the sklearn TfidfVectorizer constructer. 
-    max_df : float
-        Corresponds to 'max_df' parameter of the sklearn TfidfVectorizer constructer. 
-    min_df : float
-        Corresponds to 'min_df' parameter of the sklearn TfidfVectorizer constructer. 
-    norm : str
-        Corresponds to 'norm' parameter of the sklearn TfidfVectorizer constructer. 
-
-    Returns
-    -------
-    TfidfVectorizer
-        A TfidfVectorizer object with the given parameters as its preprocessing properties.
-    """
-    vectorizer = TfidfVectorizer(max_features=max_features, stop_words=stop_words, max_df=max_df,min_df=min_df,norm=norm)
-    return vectorizer
-
-def cossim(query, doc):
-    vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
+def cossim(query, doc, svd=True):
     corpus = [doc["Description"], query]  #combine doc and query into a single list
-    vectorizer.fit(corpus) #fit on both doc and query
-    doc_vector = vectorizer.transform([doc["Description"]]).toarray()  #transform doc as a single string
-    query_vector = vectorizer.transform([query]).toarray()  #transform query as a single string
+    score = max(doc["Rating"], 1.6) if doc["Rating"] else 1.3 
+    score = math.log(score) 
+    #apply this as a logarithmic multiple, minimum of .5x ish for docs that have ratings to prioritize them, max of 2.3x
+    #utilize svd on the corpus or just normal vectorizer
+    if svd:
+        vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
+        X = vectorizer.fit_transform(corpus) #fit and change dimensionality
+        svd_model = TruncatedSVD(n_iter=10)
+        X_svd = svd_model.fit_transform(X) #use svd on the data
+    else:
+        vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
+        X_svd = vectorizer.fit_transform(corpus) #fit on the query and documents, no svd - this is just x_svd to make it easier
+    doc_vector = X_svd[0]  #transform doc as a single string
+    query_vector = X_svd[1]  #transform query as a single string
     numerator = np.dot(query_vector, doc_vector.T)  # transpose doc_vector for correct shape
     denominator = np.linalg.norm(query_vector) * np.linalg.norm(doc_vector)
-    return numerator[0][0] / denominator #return the cosine similarity (should be a scalar)
+    return min(1, score*numerator / denominator) #return the cosine similarity (capped at one due to the rating weighting)
 
 
-#TODO - want to also give weight to exercise and rating
+#TODO - want to also give weight to equipment and rating
 
 
 #find the top k documents corresponding to a query - pass in a set of documents to check through
@@ -108,10 +88,11 @@ def top_k_docs(query, docs, k):
     #run cosine similarity 
     top_k = []
     for doc in docs:
-        score = cossim(query, doc)
-        top_k.append((doc, score))
+        score = cossim(query, doc, True) #change to false if you don't want to use SVD
+        rating = doc["Rating"] if doc["Rating"] else None
+        top_k.append((doc, score, rating))
     top_k = sorted(top_k, key=lambda x:x[1])[-k:][::-1] #sort by score and get the top k in reverse
-    return [(exercise, score) for exercise, score in top_k] #return the exercise and the similarity score
+    return [(exercise, score, rating) for exercise, score, rating in top_k] #return the exercise and the similarity score
 
 #get the exercise percentage split for a plan given a sport - should add to num_exercises
 def get_split(sport, num_exercises):
@@ -126,7 +107,7 @@ def get_split(sport, num_exercises):
         "Other": {"Glutes": 15, "Hamstrings": 10, "Quads": 15, "Biceps": 10, "Triceps": 10, "Shoulders": 10, "Back": 10, "Chest": 10, "Cardio": 20, "Abs/Core": 10},
     }
     if sport not in given_sports:
-        sport = "Other" #default for now - eventually we will do edit distance
+        sport = "Other" #default for now - eventually we will do edit distance or something
     percentages = exercise_data[sport]
     sport_dict = {muscle: round((percent / 100) * num_exercises) for muscle, percent in percentages.items()}
     total_assigned_exercises = sum(sport_dict.values())
@@ -171,6 +152,7 @@ def sort_json_by_group(group):
     return docs
 
 #takes in a sport, a level, and a query, and generates a split according to both
+#TODO - implement level weighting
 def sport_search(sport, level, query, num_exercises=30):
     split = get_split(sport, num_exercises)
     exercises = []
@@ -180,7 +162,7 @@ def sport_search(sport, level, query, num_exercises=30):
         grouped_docs = sort_json_by_group(group)
         top_k = top_k_docs(query, grouped_docs, num)
         exercises.append(top_k)
-    return exercises #also returns scores
+    return exercises #also returns similarity scores and data ratings
 
 # Sample search using json with pandas
 def json_search(query):

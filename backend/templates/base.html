@@ -188,6 +188,7 @@
             for (const tuple of group) {
               const exercise = tuple[0];
               const score = tuple[1];
+              const rating = tuple[2];
               let part = "";
               if (exercise["Type"] === "Cardio") {
                 part = "Cardio";
@@ -195,8 +196,10 @@
                 part = exercise["BodyPart"];
               }
               exercise_list.push(
-                `<br> ${exercise["Description"]} <br> <strong>Body part: </strong>${part} <br>
-                <strong>Similarity score: </strong>${score}` //this should add a score too
+                `<br> ${exercise["Description"]} <br> 
+                <strong>Body part: </strong>${part} <br> 
+                <strong>Exercise rating: </strong>${rating} <br>
+                <strong>Similarity score: </strong>${score} `
                 //want to split this by exercise title and stuff too
               );
             }
