@@ -90,26 +90,18 @@ def build_vectorizer(max_features, stop_words, max_df=90, min_df=1, norm='l2'):
     return vectorizer
 
 def cossim(query, doc):
-    # Initialize the vectorizer
     vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
-    
-    # Tokenize the doc and the query (no need to tokenize manually)
-    corpus = [doc["Description"], query]  # Combine doc and query into a single list
-    
-    # Fit the vectorizer on the combined corpus (doc and query)
-    vectorizer.fit(corpus)
-    
-    # Transform both the doc and the query using the fitted vectorizer
-    doc_vector = vectorizer.transform([doc["Description"]]).toarray()  # Transform doc as a single string
-    query_vector = vectorizer.transform([query]).toarray()  # Transform query as a single string
-    
-    # Now both doc_vector and query_vector are 2D arrays with shape (1, n_features)
-    # Compute the cosine similarity
-    numerator = np.dot(query_vector, doc_vector.T)  # Transpose doc_vector for correct shape
+    corpus = [doc["Description"], query]  #combine doc and query into a single list
+    vectorizer.fit(corpus) #fit on both doc and query
+    doc_vector = vectorizer.transform([doc["Description"]]).toarray()  #transform doc as a single string
+    query_vector = vectorizer.transform([query]).toarray()  #transform query as a single string
+    numerator = np.dot(query_vector, doc_vector.T)  # transpose doc_vector for correct shape
     denominator = np.linalg.norm(query_vector) * np.linalg.norm(doc_vector)
-    
-    # Return the cosine similarity (should be a scalar)
-    return numerator[0][0] / denominator
+    return numerator[0][0] / denominator #return the cosine similarity (should be a scalar)
+
+
+#TODO - want to also give weight to exercise and rating
+
 
 #find the top k documents corresponding to a query - pass in a set of documents to check through
 def top_k_docs(query, docs, k):
@@ -118,8 +110,8 @@ def top_k_docs(query, docs, k):
     for doc in docs:
         score = cossim(query, doc)
         top_k.append((doc, score))
-    top_k = sorted(top_k, key=lambda x:x[1])[-k:] #sort by score and get the top k
-    return [exercise for exercise, score in top_k]
+    top_k = sorted(top_k, key=lambda x:x[1])[-k:][::-1] #sort by score and get the top k in reverse
+    return [(exercise, score) for exercise, score in top_k] #return the exercise and the similarity score
 
 #get the exercise percentage split for a plan given a sport - should add to num_exercises
 def get_split(sport, num_exercises):
@@ -163,17 +155,23 @@ def sort_json_by_group(group):
     'Back': ['Lats', 'Middle Back', 'Traps', 'Lower Back', 'Forearms'],
     'Chest': ['Chest'],
     'Abs/Core': ['Abdominals'],
-    'Cardio': ['Neck', 'Calves']
+    'Cardio': ['Cardio']
+     #cardio filters by type instead of body part!
     }
     acceptable_parts = body_parts_to_categories[group]
     docs = []
-    for item in data: #iterate through the json file and filter by this group
-        if item["BodyPart"] in acceptable_parts:
-            docs.append(item)
+    if group != "Cardio":
+        for item in data: #iterate through the json file and filter by this group
+            if item["BodyPart"] in acceptable_parts:
+                docs.append(item)
+    else:
+        for item in data:
+            if item["Type"] == "Cardio":
+                docs.append(item)
     return docs
 
-#takes in a sport and a query, and generates a split according to both
-def sport_search(sport, query, num_exercises=30):
+#takes in a sport, a level, and a query, and generates a split according to both
+def sport_search(sport, level, query, num_exercises=30):
     split = get_split(sport, num_exercises)
     exercises = []
     for group in split:
@@ -182,7 +180,7 @@ def sport_search(sport, query, num_exercises=30):
         grouped_docs = sort_json_by_group(group)
         top_k = top_k_docs(query, grouped_docs, num)
         exercises.append(top_k)
-    return exercises
+    return exercises #also returns scores
 
 # Sample search using json with pandas
 def json_search(query):
@@ -205,8 +203,11 @@ def episodes_search():
 @app.route("/exercises")
 def exercises_search():
     sport = request.args.get("sport")
+    level = request.args.get("level")
+    if level.lower() not in ["beginner", "intermediate", "expert"]:
+        level = "Intermediate"
     query = request.args.get("level") + " " + request.args.get("goals")
-    exercises = sport_search(sport, query, 30)
+    exercises = sport_search(sport, level, query, 30)
     return exercises
 
 if 'DB_NAME' not in os.environ:

@@ -41,8 +41,17 @@
 
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
-          <input placeholder="Fitness level" id="filter-text-level" />
-          <!-- change these to dropdowns maybe -->
+          <input
+            placeholder="Fitness level"
+            list="level"
+            name="myLevel"
+            id="myLevel"
+          />
+          <datalist id="level" placeholder="Fitness level">
+            <option value="Beginner"></option>
+            <option value="Intermediate"></option>
+            <option value="Expert"></option>
+          </datalist>
         </div>
         <div class="input-box" onclick="focus()">
           <img src="{{ url_for('static', filename='images/mag.png') }}" />
@@ -70,7 +79,7 @@
     function queryUpdate() {
       total = 0;
       sport = document.getElementById("mySport").value;
-      level = document.getElementById("filter-text-level").value;
+      level = document.getElementById("myLevel").value;
       goals = document.getElementById("filter-text-goals").value;
       query = [sport, level, goals];
       curr_query = document.getElementById("curr-query");
@@ -84,15 +93,14 @@
           const groupedExercises = [];
           for (let i = 0; i < exerciseList.length; i += 6) {
             groupedExercises.push(exerciseList.slice(i, i + 6)); // create groups of 6
-            console.log(groupedExercises);
             if (
               groupedExercises.length === 2 ||
               groupedExercises.length === 5
             ) {
-              groupedExercises.push("rest"); // Add "Rest" after every 3rd group
+              groupedExercises.push("rest"); //add "Rest" after every 3rd group
             }
           }
-          createCalendar(groupedExercises); // Call createCalendar after exercise_list is fetched
+          createCalendar(groupedExercises); //call createCalendar after exercise_list is fetched
           curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`; //not generating any more
         })
         .catch((error) => {
@@ -177,9 +185,18 @@
         .then((data) => {
           let exercise_list = [];
           for (const group of data) {
-            for (const exercise of group) {
+            for (const tuple of group) {
+              const exercise = tuple[0];
+              const score = tuple[1];
+              let part = "";
+              if (exercise["Type"] === "Cardio") {
+                part = "Cardio";
+              } else {
+                part = exercise["BodyPart"];
+              }
               exercise_list.push(
-                `<br> ${exercise["Description"]} <br> <strong>Body part: </strong>${exercise["BodyPart"]}`
+                `<br> ${exercise["Description"]} <br> <strong>Body part: </strong>${part} <br>
+                <strong>Similarity score: </strong>${score}` //this should add a score too
                 //want to split this by exercise title and stuff too
               );
             }
