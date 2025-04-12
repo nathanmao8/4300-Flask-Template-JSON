@@ -80,7 +80,7 @@ def cossim(query, doc, svd=True):
     return min(1, score*numerator / denominator) #return the cosine similarity (capped at one due to the rating weighting)
 
 
-#TODO - want to also give weight to equipment and rating
+#TODO - want to also give weight to equipment
 
 
 #find the top k documents corresponding to a query - pass in a set of documents to check through
