@@ -30,7 +30,8 @@ CORS(app)
 
 #function to convert 'megaGymDataset.csv' to 'exerciseDataset.json' 
 csv_filename = '../data/megaGymDataset.csv'
-json_filename = 'exerciseDataset.json' #can change back to relative path for local development
+#json_filename = 'exerciseDataset.json' #can change back to relative path for local development
+json_filename = 'exerciseDatasetWithComments.json' #with the social data now
 #json_filename = 'exerciseDataset.json'
 '''
 # Read CSV and convert to JSON
@@ -59,11 +60,14 @@ with open(json_filename, 'w', encoding='utf-8') as jsonfile:
 with open(json_filename, 'r', encoding='utf-8') as file:
     data = json.load(file)
 
-def cossim(query, doc, svd=True):
-    corpus = [doc["Description"], query]  #combine doc and query into a single list
+def cossim(level, query, doc, svd=True):
+    comments = " ".join(doc["reddit_comments"]) #should be a list joined into one long comment (or none)
+    corpus = [doc["Description"] + comments, query]  #combine doc and query into a single list
     score = max(doc["Rating"], 1.6) if doc["Rating"] else 1.3 
     score = math.log(score) 
     #apply this as a logarithmic multiple, minimum of .5x ish for docs that have ratings to prioritize them, max of 2.3x
+    exercise_level = doc["Level"]
+    level_mult = 1 if exercise_level == level else .8 #decrease scoring for non equal level
     #utilize svd on the corpus or just normal vectorizer
     if svd:
         vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
@@ -77,18 +81,18 @@ def cossim(query, doc, svd=True):
     query_vector = X_svd[1]  #transform query as a single string
     numerator = np.dot(query_vector, doc_vector.T)  # transpose doc_vector for correct shape
     denominator = np.linalg.norm(query_vector) * np.linalg.norm(doc_vector)
-    return min(1, score*numerator / denominator) #return the cosine similarity (capped at one due to the rating weighting)
+    return min(1, score*level_mult*numerator / denominator) #return the cosine similarity (capped at one due to the rating weighting)
 
 
 #TODO - want to also give weight to equipment
 
 
 #find the top k documents corresponding to a query - pass in a set of documents to check through
-def top_k_docs(query, docs, k):
+def top_k_docs(level, query, docs, k):
     #run cosine similarity 
     top_k = []
     for doc in docs:
-        score = cossim(query, doc, True) #change to false if you don't want to use SVD
+        score = cossim(level, query, doc, True) #change to false if you don't want to use SVD
         rating = doc["Rating"] if doc["Rating"] else None
         top_k.append((doc, score, rating))
     top_k = sorted(top_k, key=lambda x:x[1])[-k:][::-1] #sort by score and get the top k in reverse
@@ -151,8 +155,7 @@ def sort_json_by_group(group):
                 docs.append(item)
     return docs
 
-#takes in a sport, a level, and a query, and generates a split according to both
-#TODO - implement level weighting
+#takes in a sport, a level, and a query, and generates a split accordingly
 def sport_search(sport, level, query, num_exercises=30):
     split = get_split(sport, num_exercises)
     exercises = []
@@ -160,7 +163,7 @@ def sport_search(sport, level, query, num_exercises=30):
         num = split[group]
         #sort the json file by this group
         grouped_docs = sort_json_by_group(group)
-        top_k = top_k_docs(query, grouped_docs, num)
+        top_k = top_k_docs(level, query, grouped_docs, num)
         exercises.append(top_k)
     return exercises #also returns similarity scores and data ratings
 
