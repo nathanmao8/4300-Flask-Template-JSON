@@ -94,9 +94,10 @@ def top_k_docs(level, query, docs, k):
     for doc in docs:
         score = cossim(level, query, doc, True) #change to false if you don't want to use SVD
         rating = doc["Rating"] if doc["Rating"] else None
-        top_k.append((doc, score, rating))
+        comment = doc["reddit_comments"][0] if doc["reddit_comments"] else None #just gets the first associated reddit comment
+        top_k.append((doc, score, rating, comment))
     top_k = sorted(top_k, key=lambda x:x[1])[-k:][::-1] #sort by score and get the top k in reverse
-    return [(exercise, score, rating) for exercise, score, rating in top_k] #return the exercise and the similarity score
+    return [(exercise, score, rating, comment) for exercise, score, rating, comment in top_k] #return the exercise and the similarity score
 
 #get the exercise percentage split for a plan given a sport - should add to num_exercises
 def get_split(sport, num_exercises):

@@ -77,6 +77,9 @@
     let total = 0;
 
     function queryUpdate() {
+      if (query == ["None", "None", "None"]) {
+        return;
+      }
       total = 0;
       sport = document.getElementById("mySport").value;
       level = document.getElementById("myLevel").value;
@@ -189,6 +192,7 @@
               const exercise = tuple[0];
               const score = tuple[1];
               const rating = tuple[2];
+              const comment = tuple[3];
               let part = "";
               if (exercise["Type"] === "Cardio") {
                 part = "Cardio";
@@ -199,7 +203,9 @@
                 `<br> ${exercise["Description"]} <br> 
                 <strong>Body part: </strong>${part} <br> 
                 <strong>Exercise rating: </strong>${rating} <br>
-                <strong>Similarity score: </strong>${score} `
+                <strong>Similarity score: </strong>${score} <br>
+                <strong>Relevant reddit comment: </strong>${comment}
+                `
                 //want to split this by exercise title and stuff too
               );
             }

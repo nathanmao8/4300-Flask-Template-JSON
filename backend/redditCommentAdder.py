@@ -28,7 +28,9 @@ def assign_reddit_comments_to_exercises_json(exercise_data, reddit_comments, fil
     for idx, similarities in enumerate(similarity_matrix):
         best_match_idx = similarities.argmax()
         best_match_desc = exercise_texts[best_match_idx]
-        assigned_comments[best_match_desc].append(reddit_comments[idx]['text'])
+        if max(similarities) > .2: #change this to filter out completely irrelevant comments
+            assigned_comments[best_match_desc].append(reddit_comments[idx]['text'])
+        
 
     for exercise in exercise_data:
         exercise['reddit_comments'] = assigned_comments.get(exercise['Description'], [])
@@ -42,10 +44,10 @@ def assign_reddit_comments_to_exercises_json(exercise_data, reddit_comments, fil
 if __name__ == "__main__":
     current_directory = os.path.dirname(os.path.abspath(__file__))
 
-    with open(os.path.join(current_directory, 'exerciseDataset.json'), 'r') as f:
+    with open(os.path.join(current_directory, 'exerciseDataset.json'), 'r', encoding='utf-8') as f:
         exercise_data = json.load(f)
 
-    with open(os.path.join(current_directory, 'utterancesFiltered.json'), 'r') as f:
+    with open(os.path.join(current_directory, 'utterancesFiltered.json'), 'r', encoding='utf-8') as f:
         reddit_comments = json.load(f)
 
     assign_reddit_comments_to_exercises_json(exercise_data, reddit_comments)
