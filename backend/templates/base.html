@@ -11,6 +11,27 @@
 <body>
   <div class="full-body-container">
     <div class="top-text">
+      <div class="information">
+        <span id="information"> Information</span>
+        <br />
+        <div class="info-dropdown">
+          Enter in a query below and click generate to get started.
+          <li>
+            As a general rule of thumb, try to do three sets of each exercise at
+            6-10 reps each, with at least 2 minutes of rest in between each set.
+          </li>
+          <li>
+            The similarity score shows you how similar the exercise description
+            is to your query, and the rating is an aggregate review from fitness
+            communities out of 10.
+          </li>
+          <li>
+            Each exercise may have a corresponded Reddit comment that is the
+            most similar to that exercise - it may or may not be relevant. Treat
+            these comments with care!
+          </li>
+        </div>
+      </div>
       <div id="sweatmetric">
         SWE<img
           src="{{ url_for('static', filename='images/sweat_drop.png') }}"

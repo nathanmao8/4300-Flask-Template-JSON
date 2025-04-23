@@ -14,6 +14,7 @@
 
 html,
 body {
+  font-family: "Open Sans", sans-serif;
   margin: 0;
   padding: 0;
   overflow-x: hidden; /*this makes sure the banner doesn't cause horizontal overflow*/
@@ -26,13 +27,39 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-family: "Open Sans", sans-serif;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   border-bottom: black 10px;
   padding: 50px 0px 50px 0px;
   background-color: rgb(0, 140, 186);
   width: 100vw;
   border-bottom: 3px solid rgba(0, 0, 0, 0.3);
+}
+
+.information {
+  position: absolute;
+  left: 4.25vw;
+  top: calc(11vh - 0.5rem - 13px);
+  padding: 15px;
+  color: white;
+  font-size: 1.5rem;
+  max-width: 200px;
+}
+
+#information {
+  text-decoration: underline;
+}
+
+.info-dropdown {
+  display: none;
+  font-size: 1rem;
+}
+.information:hover {
+  background: rgb(0, 98, 130);
+  visibility: visible;
+}
+
+.information:hover .info-dropdown {
+  display: block;
 }
 
 .input-menu {
@@ -59,13 +86,17 @@ body {
 }
 
 .generate-button {
-  font-family: "Open Sans", sans-serif;
   border: solid rgb(0, 140, 186) 4px;
   border-radius: 20px;
   padding: 10px;
   margin-top: 20px;
   color: #fff;
   background: rgb(0, 140, 186);
+}
+
+.generate-button:hover {
+  border: solid rgb(0, 98, 130) 4px;
+  background: rgb(0, 98, 130);
 }
 
 .episode-title {
@@ -94,7 +125,6 @@ body {
 
 .dayBox {
   padding: 20px;
-  font-family: "Open Sans", sans-serif;
   flex: 1;
   min-width: 100px;
   max-width: 180px;
@@ -108,7 +138,6 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: "Open Sans", sans-serif;
 }
 
 /* drop down for exercise expanded */
