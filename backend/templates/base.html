@@ -80,7 +80,12 @@
         </div>
       </div>
     </div>
-    <div class="generate-button" onclick="queryUpdate()">Generate Plan</div>
+    <div
+      style="display: flex; align-items: center; margin-top: 20px; gap: 50px"
+    >
+      <div class="generate-button" onclick="queryUpdate()">Generate Plan</div>
+      <div class="svd" id="svd" onclick="svdUpdate()">SVD: On</div>
+    </div>
     <div
       id="curr-query"
       style="
@@ -88,7 +93,9 @@
         white-space: pre-line;
         margin-top: 20px;
       "
-    ></div>
+    >
+      <div class="loader" id="loader"></div>
+    </div>
     <!-- Also a placeholder - just here to show that it makes sense -->
     <div id="calendar-box"></div>
   </div>
@@ -96,6 +103,13 @@
   <script>
     let query = ["None", "None", "None"]; //we want to assemble a full query
     let total = 0;
+    let svd = true;
+    document
+      .getElementById("svd")
+      .style.setProperty("--svd-background-color", "green"); //button hover property initialized
+    document
+      .getElementById("svd")
+      .style.setProperty("--svd-hover-color", "rgb(0, 104, 0)"); //button hover property initialized
 
     function queryUpdate() {
       if (query == ["None", "None", "None"]) {
@@ -107,8 +121,9 @@
       goals = document.getElementById("filter-text-goals").value;
       query = [sport, level, goals];
       curr_query = document.getElementById("curr-query");
-      curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} 
-      \n\n Generating workout plan...`;
+      curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]}
+      \n\n Generating workout plan... <div class="loader" id="loader"></div>`;
+      document.getElementById("loader").style.display = "block";
       //for now - 6 exercises a day, rest every 3rd day - 30 total exercises based on splits
       exerciseList = getExerciseList(query);
       getExerciseList(query)
@@ -125,11 +140,13 @@
             }
           }
           createCalendar(groupedExercises); //call createCalendar after exercise_list is fetched
-          curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n`; //not generating any more
+          document.getElementById("loader").style.display = "none";
+          curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} \n
+          <div class="loader" id="loader"></div>`; //not generating any more
         })
         .catch((error) => {
           console.error("Error fetching exercises:", error);
-          curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]} 
+          curr_query.innerHTML = `Sport: ${query[0]} \n Fitness level: ${query[1]} \n Goals: ${query[2]}
           \n \n Error fetching exercises. Please try again.`; //not generating any more
         });
     }
@@ -150,6 +167,21 @@
         return tempDiv + `</div>`;
       } else {
         return `<div class='dayBox'> <p class='day'>${day}</p><p class='exercise'>Rest Day - don't exercise today!</p> </div>`;
+      }
+    }
+
+    function svdUpdate() {
+      ele = document.getElementById("svd");
+      if (svd === true) {
+        svd = false;
+        ele.style.setProperty("--svd-background-color", "rgb(229, 0, 0)");
+        ele.innerHTML = "SVD: Off";
+        ele.style.setProperty("--svd-hover-color", "rgb(203, 0, 0)");
+      } else {
+        svd = true;
+        ele.style.setProperty("--svd-background-color", "green");
+        ele.innerHTML = "SVD: On";
+        ele.style.setProperty("--svd-hover-color", "rgb(0, 104, 0)");
       }
     }
 
@@ -203,6 +235,7 @@
             sport: query[0],
             level: query[1],
             goals: query[2],
+            svd: svd,
           }).toString()
       )
         .then((response) => response.json())
@@ -221,8 +254,8 @@
                 part = exercise["BodyPart"];
               }
               exercise_list.push(
-                `<br> ${exercise["Description"]} <br> 
-                <strong>Body part: </strong>${part} <br> 
+                `<br> ${exercise["Description"]} <br>
+                <strong>Body part: </strong>${part} <br>
                 <strong>Exercise rating: </strong>${rating} <br>
                 <strong>Similarity score: </strong>${score} <br>
                 <strong>Relevant reddit comment: </strong>${comment}

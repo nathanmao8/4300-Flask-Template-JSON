@@ -60,9 +60,10 @@ with open(json_filename, 'w', encoding='utf-8') as jsonfile:
 with open(json_filename, 'r', encoding='utf-8') as file:
     data = json.load(file)
 
-def cossim(level, query, doc, svd=True):
+def cossim(level, query, doc, svd=True): #TODO - add a toggle on the frontend for SVD
     comments = " ".join(doc["reddit_comments"]) #should be a list joined into one long comment (or none)
-    corpus = [doc["Description"] + comments, query]  #combine doc and query into a single list
+    equipment = doc["Equipment"]
+    corpus = [doc["Description"] + " " + comments + " " + equipment, query]  #combine doc and query into a single list, add equipment for better fit
     score = max(doc["Rating"], 1.6) if doc["Rating"] else 1.3 
     score = math.log(score) 
     #apply this as a logarithmic multiple, minimum of .5x ish for docs that have ratings to prioritize them, max of 2.3x
@@ -76,26 +77,27 @@ def cossim(level, query, doc, svd=True):
         X_svd = svd_model.fit_transform(X) #use svd on the data
     else:
         vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
-        X_svd = vectorizer.fit_transform(corpus) #fit on the query and documents, no svd - this is just x_svd to make it easier
+        X = vectorizer.fit_transform(corpus)
+        X_svd = X.toarray()
+        #fit on the query and documents, no svd - this is just x_svd to make it easier
     doc_vector = X_svd[0]  #transform doc as a single string
     query_vector = X_svd[1]  #transform query as a single string
     numerator = np.dot(query_vector, doc_vector.T)  # transpose doc_vector for correct shape
     denominator = np.linalg.norm(query_vector) * np.linalg.norm(doc_vector)
-    return min(1, score*level_mult*numerator / denominator) #return the cosine similarity (capped at one due to the rating weighting)
-
-
-#TODO - want to also give weight to equipment
+    cossim = numerator/denominator
+    return min(1, score*level_mult*cossim) #return the cosine similarity (capped at one due to the rating weighting)
 
 
 #find the top k documents corresponding to a query - pass in a set of documents to check through
-def top_k_docs(level, query, docs, k):
+def top_k_docs(level, query, docs, k, svd):
     #run cosine similarity 
     top_k = []
     for doc in docs:
-        score = cossim(level, query, doc, True) #change to false if you don't want to use SVD
+        score = cossim(level, query, doc, svd)
         rating = doc["Rating"] if doc["Rating"] else None
         comment = doc["reddit_comments"][0] if doc["reddit_comments"] else None #just gets the first associated reddit comment
-        top_k.append((doc, score, rating, comment))
+        if score > 0.0001 or len(top_k) < 30: #for efficiency, cut poor exercises early
+            top_k.append((doc, score, rating, comment))
     top_k = sorted(top_k, key=lambda x:x[1])[-k:][::-1] #sort by score and get the top k in reverse
     return [(exercise, score, rating, comment) for exercise, score, rating, comment in top_k] #return the exercise and the similarity score
 
@@ -157,14 +159,14 @@ def sort_json_by_group(group):
     return docs
 
 #takes in a sport, a level, and a query, and generates a split accordingly
-def sport_search(sport, level, query, num_exercises=30):
+def sport_search(sport, level, query, num_exercises=30, svd=True):
     split = get_split(sport, num_exercises)
     exercises = []
     for group in split:
         num = split[group]
         #sort the json file by this group
         grouped_docs = sort_json_by_group(group)
-        top_k = top_k_docs(level, query, grouped_docs, num)
+        top_k = top_k_docs(level, query, grouped_docs, num, svd)
         exercises.append(top_k)
     return exercises #also returns similarity scores and data ratings
 
@@ -190,10 +192,13 @@ def episodes_search():
 def exercises_search():
     sport = request.args.get("sport")
     level = request.args.get("level")
+    svd = request.args.get("svd")
+    svd_bool = svd=="true"
+    #print(svd == "true")
     if level.lower() not in ["beginner", "intermediate", "expert"]:
         level = "Intermediate"
     query = request.args.get("level") + " " + request.args.get("goals")
-    exercises = sport_search(sport, level, query, 30)
+    exercises = sport_search(sport, level, query, 30, svd_bool)
     return exercises
 
 if 'DB_NAME' not in os.environ:
